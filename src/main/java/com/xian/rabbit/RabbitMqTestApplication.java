@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class RabbitMqTestApplication implements SpringApplicationRunListener {
 
     public static void main(String[] args) {
-        log.info("RabbitMQ 组件启动");
+        log.info("RabbitMQ component Startup");
         SpringApplication.run( RabbitMqTestApplication.class, args);
     }
 

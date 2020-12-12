@@ -8,7 +8,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
- * @program: xian-live-backend
+ * @program: xian
  * @description:
  * @author: liru.xian
  * @create: 2020-09-17 17:38

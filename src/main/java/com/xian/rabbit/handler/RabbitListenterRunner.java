@@ -10,9 +10,12 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.configurationprocessor.json.JSONArray;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -36,13 +39,14 @@ public class RabbitListenterRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         String property = env.getProperty( "spring.application.name" );
+        List<RabbitMQEnums> list = new ArrayList<>(Arrays.asList( RabbitMQEnums.values() ));
         for (RabbitMQEnums mqEnums : RabbitMQEnums.values()) {
             // 死信队列 不创建消费者
             if(property.equals( mqEnums.getOwnedApplication() ) && null == mqEnums.getDeadQueue()){
                 for (ConsumerHandlerService handlerService : consumerHandlerServices) {
                     if(handlerService.isMatch( mqEnums )){
                         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer( connectionFactory );
-                        log.info( "监听 队列{},当前工程 {}",mqEnums.getQueueName(),property );
+                        log.info( "listenQueue start {},currentProject {}",mqEnums.getQueueName(),property );
                         container.setQueueNames(mqEnums.getQueueName());
                         container.setPrefetchCount(mqEnums.getPrefetchCount());
                         container.setConcurrentConsumers(mqEnums.getConcurrentConsumers());
@@ -53,9 +57,14 @@ public class RabbitListenterRunner implements ApplicationRunner {
                         container.setMessageListener( handlerService);
                         container.start();
                         SpringContextHolder.registerBean(mqEnums.getQueueName() + suffix,container);
+                        list.remove( mqEnums );
                     }
                 }
             }
         }
+        if(!list.isEmpty()){
+            log.warn("No consumers in the current queues {}", list );
+        }
     }
+
 }

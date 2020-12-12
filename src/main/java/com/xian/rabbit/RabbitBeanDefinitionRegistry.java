@@ -13,9 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 //@Conditional({RabbitCondition.class})
 //@ComponentScan(basePackages={RabbitBeanDefinitionRegistry.BASE_PACKAGE})
 public class RabbitBeanDefinitionRegistry {
-    public static final String BASE_PACKAGE = "com.xian.basis.rabbit";
+    public static final String BASE_PACKAGE = "com.xian.rabbit";
     static {
-        log.info("RabbitMQ 组件启动");
+        log.info("RabbitMQ component Startup");
     }
 }
 

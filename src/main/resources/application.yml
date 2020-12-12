@@ -1,19 +1,6 @@
-
-
 spring:
   application:
     name: mq
-server:
-  servlet:
-    context-path: /mq
-  tomcat:
-    threads:
-      max: 300
-    remoteip:
-      protocol-header: X-Forwarded-Proto
-      protocol-header-https-value: http
-      remote-ip-header: X-Forwarded-For
-      port-header: X-Forwarded-Port
   port: 8080
 
 xian:
