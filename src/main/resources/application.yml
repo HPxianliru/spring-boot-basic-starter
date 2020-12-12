@@ -1,0 +1,27 @@
+
+
+spring:
+  application:
+    name: mq
+server:
+  servlet:
+    context-path: /mq
+  tomcat:
+    threads:
+      max: 300
+    remoteip:
+      protocol-header: X-Forwarded-Proto
+      protocol-header-https-value: http
+      remote-ip-header: X-Forwarded-For
+      port-header: X-Forwarded-Port
+  port: 8080
+
+xian:
+  rabbitmq:
+    enabled: true
+    host: 81.70.200.133
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: demo
+
