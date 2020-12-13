@@ -1,5 +1,6 @@
 package com.xian.rabbit.model;
 
+import com.xian.rabbit.handler.SimpleMessageListenerContainerContextHolder;
 import lombok.Data;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.util.ObjectUtils;
@@ -44,7 +45,7 @@ public class MessageQueueDatail {
     private int activeConsumerCount;
 
     public MessageQueueDatail(String queueName, SimpleMessageListenerContainer container) {
-        String[] split = queueName.split("-");
+        String[] split = queueName.split( SimpleMessageListenerContainerContextHolder.symbol);
         this.queueName = split[0];
         this.clazz = split[1];
         this.running = container.isRunning();

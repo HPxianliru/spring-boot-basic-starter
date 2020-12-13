@@ -10,7 +10,6 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.configurationprocessor.json.JSONArray;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -27,44 +26,46 @@ import java.util.List;
 @Component
 public class RabbitListenterRunner implements ApplicationRunner {
 
-    public static final String suffix = "Container";
-    @Autowired
-    Environment env;
-    @Autowired
-    private ConnectionFactory connectionFactory;
-    @Autowired
-    private List<ConsumerHandlerService> consumerHandlerServices;
+    public static final String CONTAINER_SUFFIX = "Container";
 
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        String property = env.getProperty( "spring.application.name" );
-        List<RabbitMQEnums> list = new ArrayList<>(Arrays.asList( RabbitMQEnums.values() ));
-        for (RabbitMQEnums mqEnums : RabbitMQEnums.values()) {
-            // 死信队列 不创建消费者
-            if(property.equals( mqEnums.getOwnedApplication() ) && null == mqEnums.getDeadQueue()){
-                for (ConsumerHandlerService handlerService : consumerHandlerServices) {
-                    if(handlerService.isMatch( mqEnums )){
-                        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer( connectionFactory );
-                        log.info( "listenQueue start {},currentProject {}",mqEnums.getQueueName(),property );
-                        container.setQueueNames(mqEnums.getQueueName());
-                        container.setPrefetchCount(mqEnums.getPrefetchCount());
-                        container.setConcurrentConsumers(mqEnums.getConcurrentConsumers());
-                        //设置确认模式为手工确认
-                        container.setAcknowledgeMode( AcknowledgeMode.MANUAL);
-                        container.setExposeListenerChannel( true );
-                        //监听处理类
-                        container.setMessageListener( handlerService);
-                        container.start();
-                        SpringContextHolder.registerBean(mqEnums.getQueueName() + suffix,container);
-                        list.remove( mqEnums );
-                    }
-                }
-            }
-        }
-        if(!list.isEmpty()){
-            log.warn("No consumers in the current queues {}", list );
-        }
+        Environment env = SpringContextHolder.getBean( Environment.class );
+        ConnectionFactory connectionFactory = SpringContextHolder.getBean( ConnectionFactory.class );
+        List<ConsumerHandlerService> consumerHandlerServices = SpringContextHolder.getBeansOfTypeList(ConsumerHandlerService.class);
+
+//        String property = env.getProperty( "spring.application.name" );
+//        List<RabbitMQEnums> list = new ArrayList<>(Arrays.asList( RabbitMQEnums.values() ));
+//        for (RabbitMQEnums mqEnums : RabbitMQEnums.values()) {
+//            // 死信队列 不创建消费者
+//            if(property.equals( mqEnums.getOwnedApplication() ) && null == mqEnums.getDeclareEnums().getDeadQueue()){
+//                for (ConsumerHandlerService handlerService : consumerHandlerServices) {
+//                    if(handlerService.isMatch( mqEnums )){
+//                        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer( connectionFactory );
+//                        log.info( "listenQueue start {},currentProject {}",mqEnums.getQueueName(),property );
+//                        container.setQueueNames(mqEnums.getQueueName());
+//                        container.setPrefetchCount(mqEnums.getConsumerEnums().getPrefetchCount());
+//                        container.setConcurrentConsumers(mqEnums.getConsumerEnums().getConcurrentConsumers());
+//                        //设置确认模式为手工确认
+//                        if(mqEnums.getConsumerEnums().getAcknowledgeMode()){
+//                            container.setAcknowledgeMode( AcknowledgeMode.MANUAL);
+//                        }else {
+//                            container.setAcknowledgeMode( AcknowledgeMode.AUTO );
+//                        }
+//                        container.setExposeListenerChannel( true );
+//                        //监听处理类
+//                        container.setMessageListener( handlerService);
+//                        container.start();
+//                        SpringContextHolder.registerBean(mqEnums.getQueueName() + CONTAINER_SUFFIX,container);
+//                        list.remove( mqEnums );
+//                    }
+//                }
+//            }
+//        }
+//        if(!list.isEmpty()){
+//            log.warn("No consumers in the current queues {}", list );
+//        }
     }
 
 }

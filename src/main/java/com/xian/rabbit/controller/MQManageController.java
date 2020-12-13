@@ -1,7 +1,13 @@
 package com.xian.rabbit.controller;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
+import com.xian.rabbit.config.RabbitAutoBeanDefinitionRegistryPostProcessor;
+import com.xian.rabbit.enums.RabbitMQEnums;
 import com.xian.rabbit.handler.SimpleMessageListenerContainerContextHolder;
 import com.xian.rabbit.model.MessageQueueDatail;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,5 +62,15 @@ public class MQManageController {
     @GetMapping("statAllMessageQueueDetail")
     public List<MessageQueueDatail> statAllMessageQueueDetail() {
         return SimpleMessageListenerContainerContextHolder.statAllMessageQueueDetail();
+    }
+
+    /**
+     * 未监听的队列
+     * @return
+     */
+    @GetMapping("queueNotListening")
+    public List<String> queueNotListening() {
+
+        return RabbitAutoBeanDefinitionRegistryPostProcessor.QUEUE_NOT_LISTENING.stream().map( RabbitMQEnums::getQueueName  ).collect( Collectors.toList() );
     }
 }

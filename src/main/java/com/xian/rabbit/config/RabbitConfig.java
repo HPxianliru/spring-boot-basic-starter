@@ -26,6 +26,7 @@ import org.springframework.context.annotation.*;
  */
 @Slf4j
 @Configuration
+@Import( {RabbitMqProperties.class,RabbitTemplateConfig.class} )
 public class RabbitConfig {
 
     @Autowired

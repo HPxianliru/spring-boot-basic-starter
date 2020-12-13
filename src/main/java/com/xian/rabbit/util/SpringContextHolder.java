@@ -11,6 +11,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * 以静态变量保存Spring ApplicationContext
  * 可在任何代码任何地方任何时候取出ApplicaitonContext.
@@ -57,6 +61,15 @@ public class SpringContextHolder implements ApplicationContextAware, BeanFactory
         assertContextInjected();
         return applicationContext.getBean(requiredType);
     }
+
+    public static <T> Map <String, T> getBeansOfTypeMap(Class<T> baseType){
+        return applicationContext.getBeansOfType(baseType);
+    }
+
+    public static <T> List<T> getBeansOfTypeList(Class<T> baseType){
+        return new ArrayList <>( applicationContext.getBeansOfType(baseType).values() );
+    }
+
 
     /**
      * 清除SpringContextHolder中的ApplicationContext为Null.
