@@ -1,7 +1,6 @@
 package com.xian.basis.quartz.properties;
 
 
-import com.zaxxer.hikari.HikariConfig;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
