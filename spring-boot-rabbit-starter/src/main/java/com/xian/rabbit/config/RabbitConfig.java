@@ -99,11 +99,12 @@ public class RabbitConfig {
         //设置集群方式
         if(StringUtils.isNotBlank( rabbitMqProperties.getAddresses() )){
             connectionFactory.setAddresses(rabbitMqProperties.getAddresses());
+        }else {
+            //设置单节点方式
+            connectionFactory.setHost(rabbitMqProperties.getHost());
+            //设置端口
+            connectionFactory.setPort(rabbitMqProperties.getPort());
         }
-        //设置单节点方式
-        connectionFactory.setHost(rabbitMqProperties.getHost());
-        //设置端口
-        connectionFactory.setPort(rabbitMqProperties.getPort());
         //设置用户名
         connectionFactory.setUsername(rabbitMqProperties.getUsername());
         //设置密码

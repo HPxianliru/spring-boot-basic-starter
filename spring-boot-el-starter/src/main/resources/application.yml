@@ -1,0 +1,10 @@
+server:
+  port: 8802
+
+spring:
+  application:
+    name: el
+  data:
+    elasticsearch:
+      cluster-nodes: 81.70.200.133:9300
+      cluster-name: elasticsearch

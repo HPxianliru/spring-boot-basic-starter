@@ -1,6 +1,7 @@
 package com.xian.rabbit.service;
 
-import com.xian.rabbit.enums.RabbitMQEnums;
+import com.rabbitmq.client.Channel;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 
 /**
@@ -12,9 +13,11 @@ import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 public interface ConsumerHandlerService  extends ChannelAwareMessageListener {
 
     /**
-     *
-     * @param rabbitMQEnums
+     * 默认制定队列的消费者
+     * @param queueName
      * @return
      */
-    boolean isMatch(RabbitMQEnums rabbitMQEnums);
+    boolean isMatch(String queueName);
+
+    void onMessage(Message message, Channel channel) throws Exception ;
 }

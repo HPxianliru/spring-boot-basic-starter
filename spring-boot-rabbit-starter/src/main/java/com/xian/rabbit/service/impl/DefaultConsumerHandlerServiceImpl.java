@@ -1,7 +1,6 @@
 package com.xian.rabbit.service.impl;
 
 import com.rabbitmq.client.Channel;
-import com.xian.rabbit.enums.RabbitMQEnums;
 import com.xian.rabbit.service.ConsumerHandlerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -19,12 +18,12 @@ public class DefaultConsumerHandlerServiceImpl implements ConsumerHandlerService
 
 
     /**
-     * @param rabbitMQEnums
+     * @param queueName
      * @return
      */
     @Override
-    public boolean isMatch(RabbitMQEnums rabbitMQEnums) {
-        return RabbitMQEnums.DEFAULT_TEST_QUEUE.getQueueName().equals(rabbitMQEnums.getQueueName())?Boolean.TRUE:Boolean.FALSE;
+    public boolean isMatch(String queueName) {
+        return "test".equals(queueName)?Boolean.TRUE:Boolean.FALSE;
     }
 
 
@@ -33,4 +32,5 @@ public class DefaultConsumerHandlerServiceImpl implements ConsumerHandlerService
         log.info(new String(message.getBody()));
         channel.basicAck(message.getMessageProperties().getDeliveryTag(),true);
     }
+
 }

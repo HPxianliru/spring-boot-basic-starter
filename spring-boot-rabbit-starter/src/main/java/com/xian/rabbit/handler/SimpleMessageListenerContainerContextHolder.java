@@ -2,7 +2,9 @@ package com.xian.rabbit.handler;
 
 import com.xian.rabbit.config.RabbitAutoBeanDefinitionRegistryPostProcessor;
 import com.xian.rabbit.constant.MqConstant;
-import com.xian.rabbit.enums.RabbitMQEnums;
+import com.xian.rabbit.db.entity.RabbitConsumerEntity;
+import com.xian.rabbit.db.entity.RabbitDeclareEntity;
+import com.xian.rabbit.db.entity.RabbitQueueEntity;
 import com.xian.rabbit.model.MessageQueueDatail;
 import com.xian.rabbit.service.ConsumerHandlerService;
 import lombok.extern.slf4j.Slf4j;
@@ -10,9 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -34,12 +34,6 @@ public class SimpleMessageListenerContainerContextHolder {
     private static final String CONTAINER_NOT_EXISTS = "消息队列%s对应的监听容器不存在！";
 
     public static final String symbol = "_";
-
-    @Autowired
-    private AmqpAdmin amqpAdmin;
-
-    @Autowired
-    private RabbitListenerEndpointRegistry registry;
 
     /**
      * 所有的队列监听容器MAP
@@ -95,14 +89,6 @@ public class SimpleMessageListenerContainerContextHolder {
         return true;
     }
 
-    private Map<String, SimpleMessageListenerContainer> getQueue2ContainerAllMap() {
-        registry.getListenerContainers().forEach(container -> {
-            SimpleMessageListenerContainer simpleContainer = (SimpleMessageListenerContainer) container;
-            Arrays.stream(simpleContainer.getQueueNames()).forEach(queueName ->
-                    ALL_QUEUE2_CONTAINER_MAP.putIfAbsent(StringUtils.trim(queueName), simpleContainer));
-        });
-        return ALL_QUEUE2_CONTAINER_MAP;
-    }
     /**
      * 统计所有消息队列详情
      * @return
@@ -136,25 +122,6 @@ public class SimpleMessageListenerContainerContextHolder {
         return null;
     }
 
-    /**
-     * 动态创建绑定队列
-     * @param queueName
-     * @return
-     */
-    private Boolean bindingCreateQueue(String queueName){
-        for (RabbitMQEnums rabbitMQEnums : RabbitMQEnums.values()) {
-            if(rabbitMQEnums.getQueueName().equals( queueName )){
-                Queue queue = declareQueue( rabbitMQEnums );
-                Exchange exchange = exchange( rabbitMQEnums );
-                amqpAdmin.declareQueue( queue );
-                amqpAdmin.declareExchange( exchange );
-                Binding binding = declareBinding(queue,exchange,rabbitMQEnums.getRoutingKey());
-                amqpAdmin.declareBinding( binding );
-                return true;
-            }
-        }
-        return false;
-    }
 
     /**
      *
@@ -167,70 +134,72 @@ public class SimpleMessageListenerContainerContextHolder {
         return BindingBuilder.bind( queue ).to( exchange ).with( routingKey ).noargs();
     }
 
-
     /**
      * 拼装 队列
-     * @param anEnum
+     * @param queue
      * @return
      */
-    public static Queue declareQueue(RabbitMQEnums anEnum){
-
+    public static Queue declareQueue(RabbitQueueEntity queue){
+        RabbitDeclareEntity anEnum = queue.getDeclareEntity();
         Map<String,Object> map = new HashMap<>();
-        if(StringUtils.isNotBlank( anEnum.getDeclareEnums().getDeadRoutingKey() )){
-            map.put(MqConstant.X_DEAD_LETTER_ROUTING_KEY, anEnum.getDeclareEnums().getDeadRoutingKey());
+        if(StringUtils.isNotBlank( anEnum.getDeadRoutingKey() )){
+            map.put(MqConstant.X_DEAD_LETTER_ROUTING_KEY, anEnum.getDeadRoutingKey());
         }
-        if(StringUtils.isNotBlank( anEnum.getDeclareEnums().getDeadExchange() )){
-            map.put( MqConstant.X_DEAD_LETTER_EXCHANGE,anEnum.getDeclareEnums().getDeadExchange());
+        if(StringUtils.isNotBlank( anEnum.getDeadExchange() )){
+            map.put( MqConstant.X_DEAD_LETTER_EXCHANGE,anEnum.getDeadExchange());
         }
-        if(null != anEnum.getDeclareEnums().getPriority()) {
-            map.put( MqConstant.X_MAX_PRIORITY,anEnum.getDeclareEnums().getPriority() );
+        if(null != anEnum.getPriority()) {
+            map.put( MqConstant.X_MAX_PRIORITY,anEnum.getPriority() );
         }
-        if(null != anEnum.getDeclareEnums().getTtl()){
-            map.put( MqConstant.X_MESSAGE_TTL,anEnum.getDeclareEnums().getTtl() );
+        if(null != anEnum.getTtl()){
+            map.put( MqConstant.X_MESSAGE_TTL,anEnum.getTtl() );
         }
-        return  new Queue( anEnum.getQueueName(), anEnum.getDeclareEnums().getDurable(),false,anEnum.getDeclareEnums().getAutoDelete(),map );
+        return  new Queue( queue.getQueueName(), anEnum.getDurable() == 1 ?false : true,false,anEnum.getAutoDelete()== 1 ? false : true,map );
     }
 
 
     /**
      *  拼装交换机
-     * @param anEnum
+     * @param queue
      * @return
      */
-    public static Exchange exchange(RabbitMQEnums anEnum){
-        if(null != anEnum.getDeclareEnums().getAlternate()){
-            return new ExchangeBuilder(anEnum.getExchange(),anEnum.getDeclareEnums().getExchangeType())
-                    .alternate( anEnum.getDeclareEnums().getAlternate().getExchange() )
-                    .durable( anEnum.getDeclareEnums().getExchangeDurable() ).build();
+    public static Exchange exchange(RabbitQueueEntity queue){
+        RabbitQueueEntity declareEntity = queue.getDeclareEntity().getQueueEntity();
+
+        if(queue.getDeclareEntity() != null && null != queue.getDeclareEntity().getQueueEntity()){
+            return new ExchangeBuilder(queue.getExchange(),queue.getDeclareEntity().getExchangeType())
+                    .alternate( declareEntity.getExchange() ) // 备用交互机
+                    .durable( queue.getDeclareEntity().getExchangeDurable() == 1 ? false : true ).build();
         }else {
-            return new ExchangeBuilder(anEnum.getExchange(),anEnum.getDeclareEnums().getExchangeType())
-                    .durable( anEnum.getDeclareEnums().getExchangeDurable() ).build();
+            return new ExchangeBuilder(queue.getExchange(),queue.getDeclareEntity().getExchangeType())
+                    .durable( queue.getDeclareEntity().getExchangeDurable() == 1 ? false : true ).build();
         }
     }
 
+
     /**
      * 声明 SimpleMessageListenerContainer
-     * @param anEnum
+     * @param queue
      * @param connectionFactory
      * @param consumerHandlerService
      * @return
      */
-    public static SimpleMessageListenerContainer declareContainer(RabbitMQEnums anEnum,ConnectionFactory connectionFactory,ConsumerHandlerService consumerHandlerService){
+    public static SimpleMessageListenerContainer declareContainer(RabbitQueueEntity queue,ConnectionFactory connectionFactory,ConsumerHandlerService consumerHandlerService){
+        RabbitConsumerEntity consumer = queue.getConsumerEntity();
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-        container.setQueueNames(anEnum.getQueueName());
+        container.setQueueNames(queue.getQueueName());
         container.setConnectionFactory(connectionFactory);
         container.setMessageListener(consumerHandlerService);
-        container.setPrefetchCount(anEnum.getConsumerEnums().getPrefetchCount());
-        container.setConcurrentConsumers(anEnum.getConsumerEnums().getConcurrentConsumers());
+        container.setPrefetchCount(consumer.getPrefetchSize());
+        container.setConcurrentConsumers(consumer.getConcurrent());
         //设置确认模式为手工确认
-        if(anEnum.getConsumerEnums().getAcknowledgeMode()){
+        if(consumer.getAcknowledgeMode() == 1 ? false : true){
             container.setAcknowledgeMode( AcknowledgeMode.MANUAL);
         }else {
             container.setAcknowledgeMode( AcknowledgeMode.AUTO );
         }
         container.setExposeListenerChannel( true );
-        RabbitAutoBeanDefinitionRegistryPostProcessor.QUEUE_NOT_LISTENING.remove( anEnum );
-        ALL_QUEUE2_CONTAINER_MAP.put(anEnum.getQueueName()+ CONTAINER_SUFFIX,container  );
+        ALL_QUEUE2_CONTAINER_MAP.put(queue.getQueueName()+ CONTAINER_SUFFIX,container  );
         return container;
     }
 

@@ -1,7 +1,7 @@
 package com.xian.rabbit.template;
 
 import com.google.gson.Gson;
-import com.xian.rabbit.enums.RabbitMQEnums;
+import com.xian.rabbit.db.entity.RabbitQueueEntity;
 import com.xian.rabbit.exception.BussinesException;
 import com.xian.rabbit.util.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -46,10 +46,9 @@ public class AmqTemplateUtil {
      *   死信队列
      * @param json
      */
-    public static void sendDeadLetterMes(RabbitMQEnums rabbitMQEnums, String json){
+    public static void sendDeadLetterMes(RabbitQueueEntity rabbitMQEnums, String json){
         try{
-            RabbitMQEnums delayQueue = RabbitMQEnums.DELAY_QUEUE;
-            rabbitTemplate().convertAndSend(delayQueue.getExchange(),delayQueue.getRoutingKey(),  json);
+            rabbitTemplate().convertAndSend(rabbitMQEnums.getExchange(),rabbitMQEnums.getRoutingKey(),  json);
         }catch (Exception e){
             log.error("延迟队列发送失败 "+"json 内容："+json +" 错误信息{}",e.getMessage());
         }
@@ -59,7 +58,7 @@ public class AmqTemplateUtil {
      * @param json
      * @param expiration 毫秒 millisecond
      */
-    public static void sendDelayMes(RabbitMQEnums rabbitMQEnums,String json,String expiration){
+    public static void sendDelayMes(RabbitQueueEntity rabbitMQEnums,String json,String expiration){
         try{
             rabbitTemplate().convertAndSend(rabbitMQEnums.getExchange(),rabbitMQEnums.getRoutingKey(),  json,message -> {
                 //注意这里时间要是字符串形式
@@ -77,7 +76,7 @@ public class AmqTemplateUtil {
      * @param json
      * @param correlationData
      */
-    public static void sendMes(RabbitMQEnums rabbitMQEnums, String json, CorrelationData correlationData){
+    public static void sendMes(RabbitQueueEntity rabbitMQEnums, String json, CorrelationData correlationData){
         try{
             rabbitTemplate().convertAndSend(rabbitMQEnums.getExchange(),rabbitMQEnums.getRoutingKey(),  json,correlationData);
         }catch (Exception e){
@@ -90,7 +89,7 @@ public class AmqTemplateUtil {
      * @param rabbitMQEnums
      * @param json
      */
-    public static void sendDirectMes(RabbitMQEnums rabbitMQEnums, String json){
+    public static void sendDirectMes(RabbitQueueEntity rabbitMQEnums, String json){
         try{
             rabbitTemplate().convertAndSend(rabbitMQEnums.getQueueName(),json);
         }catch (Exception e){
@@ -104,7 +103,7 @@ public class AmqTemplateUtil {
      * @param message
      * @param messagePostProcessor 自定义 请求头
      */
-    public void convertAndSend(RabbitMQEnums rabbitMQEnums, final Object message, final MessagePostProcessor messagePostProcessor){
+    public void convertAndSend(RabbitQueueEntity rabbitMQEnums, final Object message, final MessagePostProcessor messagePostProcessor){
         rabbitTemplate().convertAndSend(rabbitMQEnums.getExchange(), rabbitMQEnums.getRoutingKey(), message, messagePostProcessor,null);
     }
 
@@ -114,7 +113,7 @@ public class AmqTemplateUtil {
      * @param object
      * @param correlationData
      */
-    public static void sendMes(RabbitMQEnums rabbitMQEnums, Object object, CorrelationData correlationData){
+    public static void sendMes(RabbitQueueEntity rabbitMQEnums, Object object, CorrelationData correlationData){
 
         rabbitTemplate().convertAndSend(rabbitMQEnums.getExchange(),rabbitMQEnums.getRoutingKey(),object,correlationData);
     }
@@ -124,7 +123,7 @@ public class AmqTemplateUtil {
      * @param rabbitMQEnums
      * @param object
      */
-    public static void sendMes(RabbitMQEnums rabbitMQEnums, Object object){
+    public static void sendMes(RabbitQueueEntity rabbitMQEnums, Object object){
         rabbitTemplate().convertAndSend(rabbitMQEnums.getExchange(),rabbitMQEnums.getRoutingKey(),object);
     }
 
@@ -133,7 +132,7 @@ public class AmqTemplateUtil {
      * @param rabbitMQEnums
      * @param str
      */
-    public static void sendMes(RabbitMQEnums rabbitMQEnums, String str){
+    public static void sendMes(RabbitQueueEntity rabbitMQEnums, String str){
         rabbitTemplate().convertAndSend(rabbitMQEnums.getExchange(),rabbitMQEnums.getRoutingKey(),str);
     }
 
